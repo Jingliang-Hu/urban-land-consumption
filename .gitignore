@@ -9,3 +9,6 @@ mat_script/data
 mat_script/src/MAPPER/example_scripts
 mat_script/src/MAPPER/examples
 
+# ignore sever feedbacks of tasks
+*.out
+
