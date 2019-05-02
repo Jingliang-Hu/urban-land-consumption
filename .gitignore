@@ -6,6 +6,6 @@
 mat_script/data
 
 # ignore online mapper examples
-mat_script/src/MAPPER/kepler-mapper-master
+mat_script/src/MAPPER/example_scripts
 mat_script/src/MAPPER/examples
 
