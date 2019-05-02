@@ -1,0 +1,6 @@
+
+# ignore all .mat data
+*.mat
+
+# ignore the original data files
+./mat_script/data
