@@ -12,3 +12,6 @@ mat_script/src/MAPPER/examples
 # ignore sever feedbacks of tasks
 *.out
 
+# ignore tiff data files
+*.tif
+*.tiff
