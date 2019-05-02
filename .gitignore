@@ -3,9 +3,9 @@
 *.mat
 
 # ignore the original data files
-./mat_script/data
+mat_script/data
 
 # ignore online mapper examples
-./mat_script/src/MAPPER/kepler-mapper-master
-./mat_script/src/MAPPER/examples
+mat_script/src/MAPPER/kepler-mapper-master
+mat_script/src/MAPPER/examples
 
