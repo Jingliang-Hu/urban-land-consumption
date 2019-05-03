@@ -6,6 +6,7 @@ tic
 se1dir = [enviPath,'/data/MUC/SE1/S1B_IW_SLC__1SDV_20170609T052529_20170609T052557_005969_00A798_1958_Orb_Cal_Deb_Spk_TC_SUB.tif'];
 se2dir = [enviPath,'/data/MUC/SE2/204371_summer.tif'];
 labdir = [enviPath,'/data/MUC/GT/munich_cLCZ.tif'];
+
 patchSize = 0;
 
 memoryArr = zeros(1,15);
@@ -13,7 +14,7 @@ memoryArr = zeros(1,15);
 [ se1Feat ] = sen1FeatExtract( se1dir );
 memoryArr(1) = memProfile(whos,'gb');
 
-%load('/data/hu/SDG/data/MUC/tmpData/sen1Feature_local_f.mat')
+% load([enviPath,'/data/MUC/tmpData/sen1Feature_local_f.mat'])
 SE1tmp = reshape(se1Feat,size(se1Feat,1)*size(se1Feat,2),size(se1Feat,3)); se1FeatSize = size(se1Feat);
 memoryArr(2) = memProfile(whos,'gb');
 clear se1Feat
@@ -22,7 +23,7 @@ memoryArr(3) = memProfile(whos,'gb');
 [ se2Feat ] = sen2FeatExtract( se2dir );
 memoryArr(4) = memProfile(whos,'gb');
 
-%load('/data/hu/SDG/data/MUC/tmpData/sen2Feature.mat')
+%load([enviPath,'/data/MUC/tmpData/sen2Feature.mat'])
 SE2tmp = reshape(se2Feat,size(se2Feat,1)*size(se2Feat,2),size(se2Feat,3)); se2FeatSize = size(se2Feat);
 memoryArr(5) = memProfile(whos,'gb');
 clear se2Feat 
@@ -96,8 +97,10 @@ for cv_bin = 1:length(param.nbBin)
     for cv_ovp = 1:length(param.ovLap)
         inputParam.nbBin = param.nbBin(cv_bin);
         inputParam.ovLap = param.ovLap(cv_ovp);        
-        [ W1{cv_bin,cv_ovp}, ~, ~ ] = EnMIMA_MAPPER( se1Data,se1fil,inputParam );
-        [ W2{cv_bin,cv_ovp}, ~, ~ ] = EnMIMA_MAPPER( se2Data,se2fil,inputParam );
+        [ wtmp, ~, ~ ] = EnMIMA_MAPPER( se1Data,se1fil,inputParam );
+        W1{cv_bin,cv_ovp} = sparse(wtmp); clear wtmp
+        [ wtmp, ~, ~ ] = EnMIMA_MAPPER( se2Data,se2fil,inputParam );
+        W2{cv_bin,cv_ovp} = sparse(wtmp); clear wtmp
     end
 end
 memoryArr(11) = memProfile(whos,'gb');
@@ -106,21 +109,23 @@ memoryArr(12) = memProfile(whos,'gb');
 
 % label similarity graph
 G_sup = repmat(trLab,1,length(trLab))==repmat(trLab',length(trLab'),1);
-G_sup = double(G_sup);
 
 % similarity graph
-S = zeros(2*size(W1{1}));
+sz = 2*size(W1{1});
+S = sparse(sz(1),sz(2));
 S(1:length(trLab),1:length(trLab)) = G_sup;
 S(1:length(trLab),size(W1{1},2)+1:size(W1{1},2)+length(trLab)) = G_sup;
 S(size(W1{1},1)+1:size(W1{1},1)+length(trLab),1:length(trLab)) = G_sup;
 S(size(W1{1},1)+1:size(W1{1},1)+length(trLab),size(W1{1},2)+1:size(W1{1},2)+length(trLab)) = G_sup;
 % similarity degree matrix
 Ds = diag(sum(S));
+Ds(isnan(Ds)) = 0;
+Ds(isinf(Ds)) = 0;
 % similarity laplacian
-Ls = Ds - S; clear S
-Ls(isnan(Ls)) = 0; Ds(isnan(Ds)) = 0;
-Ls(isinf(Ls)) = 0; Ds(isinf(Ds)) = 0;
-
+Ls = Ds - S; clear S; Ds = sparse(Ds);
+Ls(isnan(Ls)) = 0; 
+Ls(isinf(Ls)) = 0; 
+Ls = sparse(Ls);
 % data organization
 data = blkdiag(se1Data,se2Data);
 memoryArr(13) = memProfile(whos,'gb');
@@ -129,6 +134,7 @@ memoryArr(14) = memProfile(whos,'gb');
 
 
 % initial results
+mempos1 = 0;
 maps1 = cell(numel(W1),numel(W2));
 maps2 = cell(numel(W1),numel(W2));
 Mdl_rf = cell(numel(W1),numel(W2));
@@ -144,10 +150,12 @@ for cv_w1 = 1:numel(W1)
         T = blkdiag(G1,G2);
         % topology degree matrix
         Dt = diag(sum(T));
+        Dt(isnan(Dt)) = 0;
+        Dt(isinf(Dt)) = 0;
         % topology laplacian
-        Lt = Dt - T;
-        Lt(isnan(Lt)) = 0; Dt(isnan(Dt)) = 0;
-        Lt(isinf(Lt)) = 0; Dt(isinf(Dt)) = 0;
+        Lt = Dt - T; clear T;
+        Lt(isnan(Lt)) = 0; 
+        Lt(isinf(Lt)) = 0; 
         % #########################################################################
 
 
@@ -155,8 +163,12 @@ for cv_w1 = 1:numel(W1)
         % #########################################################################
         % Compute XDX and XLX and make sure these are symmetric
         disp('Computing low-dimensional embedding...');
-        DP = double(data' * (Dt + Ds) * data);
-        LP = double(data' * (Lt + Ls) * data);
+	memTmp = memProfile(whos,'gb');
+        if memTmp > mempos1
+            mempos1 = memTmp;
+        end
+        DP = double(data' * full(Dt + Ds) * data); clear Dt
+        LP = double(data' * full(Lt + Ls) * data); clear Lt
         DP = (DP + DP') / 2;
         LP = (LP + LP') / 2;
 
@@ -202,7 +214,6 @@ for i = 1:length(idCla)
     pred(pred==i) = idCla(i);
 end
 
-labdir = '/data/hu/SDG/data/MUC/GT/munich_cLCZ.tif';
 
 [im,ref] = geotiffread(labdir);
 info = geotiffinfo(labdir);
@@ -216,7 +227,7 @@ clamap_col = label2color(clamap,'lcz');
 
 memoryArr(15) = memProfile(whos,'gb');
 toc
-save('memMonitor','memoryArr')
+save('memMonitor','memoryArr','mempos1')
 
 geotiffwrite('claMap_cLCZ.tif', uint8(clamap), ref,  ...
 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);

@@ -1,7 +1,7 @@
 % Author:       Jingliang Hu, PhD candidate 
 % Email:        jingliang.hu@dlr.de
 % Affiliation:  German Aerospace Center (DLR)
-%               Technische Universität München (TUM)
+%               Technische Universitï¿½t Mï¿½nchen (TUM)
 function [ Wpt ] = pointWiseGraph( clusterIdx )
 %This function get the MAPPER graph on the point wise level
 %   -- Input:
@@ -19,7 +19,7 @@ function [ Wpt ] = pointWiseGraph( clusterIdx )
 % disp(['Total number of local cores: ',num2str(c.NumWorkers),'; Number of cores in use: ',num2str(nbCore)]);
 
 % construct point wise graph
-Wpt =zeros(size(clusterIdx,1));
+Wpt =sparse(zeros(size(clusterIdx,1)));
 idxItv = size(clusterIdx,2);
 for i = 1:idxItv
     tmp = clusterIdx(:,i);
