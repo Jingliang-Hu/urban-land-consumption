@@ -1,18 +1,74 @@
+function [flag] = enMIMA_Workflow_One_City(cityPath,enviPath)
+% This function implements the ensemble mima for the land cover land use
+% classification.
+%   Input:
+%       - cityPath      -   a directory to a folder, where has three
+%                           subfolders: SE1, SE2, and GT, which contain a 
+%                           geotiff file of Sentinel-1, Sentinel-2, and
+%                           ground truth, respectively.
+%       - enviPath      -   a path to a firectory, where lib are stored. 
+%                           '/<directory to git local repo>/mat_script'
+%
+%   Output:
+%       - flag          -   '0' failed
+%                           '1' successed: results are saved in the ouput
+%                           directory;
+
+
 restoredefaultpath
 
 %% setting the environmental path
-enviPath = '/data/hu/sdg/mat_script';
 addpath(genpath(enviPath));
-
+flag = 0;
 
 %% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % directory setting
 % directory to Sentinel-1 analysis-ready data in GEOTIFF data format
-se1dir = [enviPath,'/data/MUC/SE1/S1B_IW_SLC__1SDV_20170609T052529_20170609T052557_005969_00A798_1958_Orb_Cal_Deb_Spk_TC_SUB.tif'];
+se1dir = [cityPath,'/SE1/*.tif'];
+fileName = dir(se1dir);
+if isempty(fileName)
+    disp('The Sentinel-1 GEOTIFF data does not exist!');
+    return
+elseif length(fileName)~=1
+    disp('More than one Sentinel-1 GEOTIFF data exist');
+    return
+else
+    se1dir = [fileName.folder,'/',fileName.name];
+    disp(['The directory to Sentinel-1 data: ',se1dir]);
+end
 % directory to Sentinel-2 analysis-ready data in GEOTIFF data format
-se2dir = [enviPath,'/data/MUC/SE2/204371_summer.tif'];
+se2dir = [cityPath,'/SE2/*.tif'];
+fileName = dir(se2dir);
+if isempty(fileName)
+    disp('The Sentinel-2 GEOTIFF data does not exist!');
+    return
+elseif length(fileName)~=1
+    disp('More than one Sentinel-2 GEOTIFF data exist');
+    return
+else
+    se2dir = [fileName.folder,'/',fileName.name];
+    disp(['The directory to Sentinel-1 data: ',se2dir]);
+end
 % directory to label data in GEOTIFF data format
-labdir = [enviPath,'/data/MUC/GT/munich_cLCZ.tif'];
+labdir = [cityPath,'/GT/*.tif'];
+fileName = dir(labdir);
+if isempty(fileName)
+    disp('The ground truth GEOTIFF data does not exist!');
+    return
+elseif length(fileName)~=1
+    disp('More than one ground truth GEOTIFF data exist');
+    return
+else
+    labdir = [fileName.folder,'/',fileName.name];
+    disp(['The directory to Sentinel-1 data: ',labdir]);
+end
+% directory to the output files
+outputDir = [cityPath,'/OUTPUT'];
+if ~isfolder(outputDir)
+    mkdir(outputDir);
+end
+disp(['The output directory was set to: ',outputDir]);
+
 %% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -20,36 +76,51 @@ labdir = [enviPath,'/data/MUC/GT/munich_cLCZ.tif'];
 patchSize = 0;
 
 %% -------------------------------------------------------------
-% STEP ONE: feature extraction of Sentinel-1 and Sentinel-2 data
+%% STEP ONE: feature extraction of Sentinel-1 and Sentinel-2 data
 %% -------------------------------------------------------------
 % feature extraction for sentinel-1
 [ se1Feat ] = sen1FeatExtract( se1dir );
-SE1tmp = reshape(se1Feat,size(se1Feat,1)*size(se1Feat,2),size(se1Feat,3)); se1FeatSize = size(se1Feat);
+se1sz = size(se1Feat);
+SE1tmp = reshape(se1Feat,se1sz(1)*se1sz(2),se1sz(3)); 
 clear se1Feat
 
 % feature extraction for sentinel-2
 [ se2Feat ] = sen2FeatExtract( se2dir );
-SE2tmp = reshape(se2Feat,size(se2Feat,1)*size(se2Feat,2),size(se2Feat,3)); se2FeatSize = size(se2Feat);
+se2sz = size(se2Feat);
+SE2tmp = reshape(se2Feat,se2sz(1)*se2sz(2),se2sz(3)); 
 clear se2Feat 
 
 %% -------------------------------------------------------------
-% STEP TWO: Find data with labels
+%% STEP TWO: Find data with labels
 %% -------------------------------------------------------------
 % load data the geolocation, sentinel-1 image location, and sentinel-2 image location of labeled data
 [ labCoord, lab ] = getROICoordinate( labdir,se1dir,se2dir,patchSize );
 
-se1LabIdx = sub2ind(se1FeatSize(1:2),labCoord(:,3),labCoord(:,4));
-se2LabIdx = sub2ind(se2FeatSize(1:2),labCoord(:,5),labCoord(:,6));
+se1LabIdx = sub2ind(se1sz(1:2),labCoord(:,3),labCoord(:,4));
+se2LabIdx = sub2ind(se2sz(1:2),labCoord(:,5),labCoord(:,6));
 
 % Sentinel-1 data preprocessing, dB scaling and mean-std normalization
+SE1tmp(:,[1:21,29:31,33:35]) = log10(SE1tmp(:,[1:21,29:31,33:35]));
+SE1tmp = zscore(SE1tmp);
 se1Observ = SE1tmp(se1LabIdx,:);
-se1Observ(:,[1:21,29:31,33:35]) = log10(se1Observ(:,[1:21,29:31,33:35]));
-se1Observ = zscore(se1Observ); 
+
+% load SE1 data for inferencing and save it into temperary data file
+SE1tmp = reshape(SE1tmp,se1sz(1),se1sz(2),se1sz(3));
+SE1PredOb = SE1tmp(labCoord(1,3):labCoord(end,3),labCoord(1,4):labCoord(end,4),:);
+clear SE1tmp se1LabIdx
+save([outputDir,'/datTmp.mat'],'SE1PredOb','labCoord','se1dir','-v7.3');
+clear SE1PredOb
 
 % Sentinel-2 data preprocessing, mean-std normalization
+SE2tmp = zscore(SE2tmp);
 se2Observ = SE2tmp(se2LabIdx,:);
-se2Observ = zscore(se2Observ); 
-clear se2LabIdx se1LabIdx SE2tmp SE1tmp
+
+% load SE2 data for inferencing and save it into temperary data file
+SE2tmp = reshape(SE2tmp,se2sz(1),se2sz(2),se2sz(3)); 
+SE2PredOb = SE2tmp(labCoord(1,5):labCoord(end,5),labCoord(1,6):labCoord(end,6),:);
+clear se2LabIdx SE2tmp
+save([outputDir,'/datTmp.mat'],'SE2PredOb','-append')
+clear SE2PredOb
 
 % get the index of all data with label
 trIndex = lab>0;
@@ -82,6 +153,7 @@ clear order trIndex unSE1 unSE2
 
 % ++++++++++++++++++++++++++++++++++++++++++++++++++++
 % EnMIMA parameter setting
+% change those parameter if you know what you are doing...
 param.nbBin = 50:10:70;
 param.ovLap = .3:.2:.7;
 param.itvFlag = 1;
@@ -140,11 +212,9 @@ clear se1Data se2Data
 
 
 % initial results
-mempos1 = 0;
 maps1 = cell(numel(W1),numel(W2));
 maps2 = cell(numel(W1),numel(W2));
 Mdl_rf = cell(numel(W1),numel(W2));
-scoresTmp = zeros(size(se1Observ,1),length(unique(trLab)));
 
 for cv_w1 = 1:numel(W1)
     G1 = W1{cv_w1};
@@ -171,10 +241,6 @@ for cv_w1 = 1:numel(W1)
         % #########################################################################
         % Compute XDX and XLX and make sure these are symmetric
         disp('Computing low-dimensional embedding...');
-	memTmp = memProfile(whos,'gb');
-        if memTmp > mempos1
-            mempos1 = memTmp;
-        end
         DP = double(data' * full(Dt + Ds) * data); clear Dt
         LP = double(data' * full(Lt + Ls) * data); clear Lt
         DP = (DP + DP') / 2;
@@ -187,12 +253,12 @@ for cv_w1 = 1:numel(W1)
         [eigvector, eigvalue] = eigs(LP, DP, size(data,2), 'sa',options);
 
         % Sort eigenvalues in descending order and get smallest eigenvectors
-        [eigvalue, ind] = sort(diag(eigvalue), 'ascend');
+        [~, ind] = sort(diag(eigvalue), 'ascend');
         eigvector = eigvector(:,ind(1:size(data,2)));
 
         % Compute final linear basis and map data
-        maps1{cv_w1,cv_w2} = eigvector(1:se1FeatSize(3),1:40);
-        maps2{cv_w1,cv_w2} = eigvector(se1FeatSize(3)+1:end,1:40);
+        maps1{cv_w1,cv_w2} = eigvector(1:se1sz(3),1:40);
+        maps2{cv_w1,cv_w2} = eigvector(se1sz(3)+1:end,1:40);
         % #########################################################################
 
 
@@ -203,20 +269,31 @@ for cv_w1 = 1:numel(W1)
         NumTrees = 100;
         rng(1); % For reproducibility
         Mdl_rf{cv_w1,cv_w2} = TreeBagger(NumTrees,trainFeat,trLab);
-        
-        disp('Inferencing using random forest ...');
-        testFeat = cat(2,se1Observ*maps1{cv_w1,cv_w2},se2Observ*maps2{cv_w1,cv_w2});
-        % interencing
-        [predLab,scores] = predict(Mdl_rf{cv_w1,cv_w2},testFeat);
-        scoresTmp = scoresTmp + scores;
-        predLab = cellfun(@str2double,predLab);
         % #########################################################################            
     end
 end
 
+% save trained projections and classifiers
+save([outputDir,'/datTmp.mat'],'maps1','maps2','Mdl_rf','-append')
+clear
+load([outputDir,'/datTmp.mat'])
+
+SE1PredOb = reshape(SE1PredOb,size(SE1PredOb,1)*size(SE1PredOb,2),size(SE1PredOb,3));
+SE2PredOb = reshape(SE2PredOb,size(SE2PredOb,1)*size(SE2PredOb,2),size(SE2PredOb,3));
+scoresTmp = zeros(size(SE1PredOb,1),length(unique(trLab)));
+disp('Inferencing using random forest ...');
+
+parfor cv_m = 1:numel(maps1)
+    disp('Inferencing using random forest ...');
+    testFeat = cat(2,SE1PredOb*maps1{cv_m},SE2PredOb*maps2{cv_m});
+    % interencing
+    [predLab,scores] = predict(Mdl_rf{cv_m},testFeat);
+    scoresTmp = scoresTmp + scores;
+    predLab = cellfun(@str2double,predLab);
+end
 % EnSembling classification results
 [~,pred] = max(scoresTmp,[],2);
-idCla = cellfun(@str2double,Mdl_rf{cv_w1,cv_w2}.ClassNames);
+idCla = cellfun(@str2double,Mdl_rf{1}.ClassNames);
 for i = 1:length(idCla)
     pred(pred==i) = idCla(i);
 end
@@ -224,28 +301,35 @@ end
 
 
 %% -------------------------------------------------------------
-% STEP FOUR: SAVE CLASSIFICATION RESULT IN GEOTIFF FORMAT
+%% STEP FOUR: SAVE CLASSIFICATION RESULT IN GEOTIFF FORMAT
 %% -------------------------------------------------------------
-[im,ref] = geotiffread(labdir);
-info = geotiffinfo(labdir);
+[~,ref] = geotiffread(se1dir);
+info = geotiffinfo(se1dir);
 
-idxLoc = sub2ind(size(im),labCoord(:,7),labCoord(:,8));
-clamap = zeros(size(im));
-clamap(idxLoc) = pred;
+clamap = reshape(pred,labCoord(end,3)-labCoord(1,3)+1,labCoord(end,4)-labCoord(1,4)+1);
 clamap_col = label2color(clamap,'lcz');
 
+firstrow    = labCoord(1,3);
+lastrow     = labCoord(end,3);
+firstcol    = labCoord(1,4);
+lastcol     = labCoord(end,4);
+
+xi = [firstcol - .5, lastcol + .5];
+yi = [firstrow - .5, lastrow + .5];
+[xlimits, ylimits] = intrinsicToWorld(R, xi, yi);
+subR = ref;
+subR.RasterSize = size(clamap);
+subR.XLimWorld = sort(xlimits);
+subR.YLimWorld = sort(ylimits);
 
 
-geotiffwrite('claMap_cLCZ.tif', uint8(clamap), ref,  ...
+geotiffwrite([outputDir,'/claMap_cLCZ.tif'], uint8(clamap), subR,  ...
 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
 
-geotiffwrite('claMap_cLCZ_col.tif', uint8(clamap_col), ref,  ...
+geotiffwrite([outputDir,'/claMap_cLCZ_col.tif'], uint8(clamap_col), subR,  ...
 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
-
-save('muc_product','pred','maps1','maps2','Mdl_rf','-v7.3')
-
 
 clear
-
-
+flag = 1;
+end
 
