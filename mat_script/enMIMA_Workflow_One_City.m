@@ -275,13 +275,12 @@ end
 
 % save trained projections and classifiers
 save([outputDir,'/datTmp.mat'],'maps1','maps2','Mdl_rf','-append')
-clear
+clearvars -except outputDir
 load([outputDir,'/datTmp.mat'])
 
 SE1PredOb = reshape(SE1PredOb,size(SE1PredOb,1)*size(SE1PredOb,2),size(SE1PredOb,3));
 SE2PredOb = reshape(SE2PredOb,size(SE2PredOb,1)*size(SE2PredOb,2),size(SE2PredOb,3));
-scoresTmp = zeros(size(SE1PredOb,1),length(unique(trLab)));
-disp('Inferencing using random forest ...');
+scoresTmp = zeros(size(SE1PredOb,1),length(Mdl_rf{1}.ClassNames));
 
 parfor cv_m = 1:numel(maps1)
     disp('Inferencing using random forest ...');
@@ -289,7 +288,7 @@ parfor cv_m = 1:numel(maps1)
     % interencing
     [predLab,scores] = predict(Mdl_rf{cv_m},testFeat);
     scoresTmp = scoresTmp + scores;
-    predLab = cellfun(@str2double,predLab);
+%    predLab = cellfun(@str2double,predLab);
 end
 % EnSembling classification results
 [~,pred] = max(scoresTmp,[],2);
