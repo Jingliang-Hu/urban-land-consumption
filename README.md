@@ -5,6 +5,7 @@ source env_example.sh
 
 ## Step 2, copy order.pp to some where, and change the processing parameters
 ## In this work, you need to change the data directory which contains all the cities
+## you can also change the linux_cluster to either mpp3 or inter.
 cp template/order.pp YOUR_DIRECTORY
 
 

@@ -14,29 +14,54 @@ ORDER_FILE=$1
 
 # give path of the Sentinel-1, Sentinel-2 and the GT data
 DATA_DIR=`cat $ORDER_FILE|awk '/^data_directory/ {print $2}'| tr -d \"`
+LINUX_CLUSTER=`cat $ORDER_FILE|awk '/^linux_cluster/ {print $2}'| tr -d \"`
+
 #LABEL_DIR=`cat $ORDER_FILE|awk '/^label_directroy/ {print $2}'| tr -d \"`
-echo "INFO:     Data directory" $DATA_DIR
+echo "INFO:     Data directory " $DATA_DIR
+echo "INFo:	Cluster " $LINUX_CLUSTER
 
 
-# loop over all
-for CITY_DIR in $(ls -d $DATA_DIR/*/); do #list only the directories on DATA_DIR
+# switch between different clusters
+case $LINUX_CLUSTER in
 
-	# cd to the city dir
-	cd $CITY_DIR
+	mpp3)
 
-	# copy sbatch file to each processing dir
-	cp -f $SDG_ROOT/template/sdg.cmd .
+		# loop over all
+		for CITY_DIR in $(ls -d $DATA_DIR/*/); do #list only the directories on DATA_DIR
+
+        		# cd to the city dir
+		        cd $CITY_DIR
+
+        		# copy sbatch file to each processing dir
+	        	cp -f $SDG_ROOT/template/sdg.cmd .
+
+	        	# replace strings in sdg.cmd
+		        sed -i "s|CITY_DIR_DUMMY|${CITY_DIR}|g" sdg.cmd
+        		sed -i "s|SDG_ROOT_DUMMY|${SDG_ROOT}|g" sdg.cmd
+
+		        # submit job
+			if [ ! -f OK.finish ]
+			then
+	        		sbatch sdg.cmd
+			else
+				echo "INFO: $CITY_DIR Already processed."
+			fi
+		done
+
+	;;
+
+
+	inter)
+		# submit one job, loop inside sdg_serial.cmd
+		cp -f $SDG_ROOT/template/sdg_serial.cmd .
+		
+		sed -i "s|SDG_ROOT_DUMMY|${SDG_ROOT}|g" sdg_serial.cmd	
+		sbatch sdg_serial.cmd
+
+	;;
 	
-	# replace strings in sdg.cmd
-	sed -i "s|CITY_DIR_DUMMY|${CITY_DIR}|g" sdg.cmd
-        sed -i "s|SDG_ROOT_DUMMY|${SDG_ROOT}|g" sdg.cmd
-
-	# submit job
-	sbatch sdg.cmd 
 	
-done
-
-
+esac
 
 
 

@@ -331,5 +331,6 @@ geotiffwrite([outputDir,'/claMap_cLCZ_col.tif'], uint8(clamap_col), subR,  ...
 
 clear
 flag = 1;
+system('touch OK.finish')
 end
 

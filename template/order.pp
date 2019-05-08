@@ -15,5 +15,5 @@
 # ---------------------------------------------------------------------------------------------
 
 data_directory          /naslx/projects/pr84ya/ga39lev3/SDG/mat_script/data/
-
+linux_cluster		inter
 
