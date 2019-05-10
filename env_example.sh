@@ -8,8 +8,7 @@
 
 
 #you only need to change the folloing path, the rest the relative
-export SDG_ROOT=/home/hpc/pr84ya/lu32hug4/processor/SDG
-
+export SDG_ROOT=/naslx/projects/pr84ya/ga39lev3/SDG
 
 
 export SDG_SCRIPT=$SDG_ROOT/script

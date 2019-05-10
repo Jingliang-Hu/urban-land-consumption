@@ -11,7 +11,7 @@
 ##SBATCH --partition=teramem_inter
 #SBATCH --export=NONE
 #SBATCH --mail-type=all
-#SBATCH --mail-user=y.wang@tum.de
+#SBATCH --mail-user=jingliang.hu@dlr.de
 #SBATCH --time=08:00:00
 
 source /etc/profile.d/modules.sh
