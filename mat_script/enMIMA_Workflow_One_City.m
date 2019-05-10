@@ -77,21 +77,30 @@ patchSize = 0;
 
 %% -------------------------------------------------------------
 %% STEP ONE: feature extraction of Sentinel-1 and Sentinel-2 data
+disp('-------------------------------------------------------------');
+disp('loading SE1 data, feature extraction ...')
 %% -------------------------------------------------------------
 % feature extraction for sentinel-1
 [ se1Feat ] = sen1FeatExtract( se1dir );
 se1sz = size(se1Feat);
 SE1tmp = reshape(se1Feat,se1sz(1)*se1sz(2),se1sz(3)); 
 clear se1Feat
+disp('loading SE1 data, DONE')
 
+disp('loading SE2 data, feature extraction ...')
 % feature extraction for sentinel-2
 [ se2Feat ] = sen2FeatExtract( se2dir );
 se2sz = size(se2Feat);
 SE2tmp = reshape(se2Feat,se2sz(1)*se2sz(2),se2sz(3)); 
 clear se2Feat 
+disp('loading SE2 data, DONE')
+
+
 
 %% -------------------------------------------------------------
 %% STEP TWO: Find data with labels
+disp('-------------------------------------------------------------');
+disp(' MIMA data organization ...')
 %% -------------------------------------------------------------
 % load data the geolocation, sentinel-1 image location, and sentinel-2 image location of labeled data
 [ labCoord, lab ] = getROICoordinate( labdir,se1dir,se2dir,patchSize );
@@ -150,7 +159,7 @@ clear order trIndex unSE1 unSE2
 %% -------------------------------------------------------------
 % STEP Three: EnMIMA
 %% -------------------------------------------------------------
-
+disp('Extracting MIMA topological structure ...')
 % ++++++++++++++++++++++++++++++++++++++++++++++++++++
 % EnMIMA parameter setting
 % change those parameter if you know what you are doing...
@@ -188,6 +197,7 @@ end
 clear se1fil se2fil Tpca
 
 % label similarity graph
+disp('Calculating fused latent space and train random forest classifiers ...')
 G_sup = repmat(trLab,1,length(trLab))==repmat(trLab',length(trLab'),1);
 
 % similarity graph
@@ -223,7 +233,7 @@ for cv_w1 = 1:numel(W1)
 	% #########################################################################
 	% SOLVING TWO-TERM MIMA: A GENERALIZED EIGENVALUE DECOMPOSITIONN
         % #########################################################################
-        disp('Computing graphs ...');
+        % disp('Computing graphs ...');
         % topology graph
         T = blkdiag(G1,G2);
         % topology degree matrix
@@ -240,7 +250,7 @@ for cv_w1 = 1:numel(W1)
 
         % #########################################################################
         % Compute XDX and XLX and make sure these are symmetric
-        disp('Computing low-dimensional embedding...');
+        % disp('Computing low-dimensional embedding...');
         DP = double(data' * full(Dt + Ds) * data); clear Dt
         LP = double(data' * full(Lt + Ls) * data); clear Lt
         DP = (DP + DP') / 2;
@@ -264,7 +274,7 @@ for cv_w1 = 1:numel(W1)
 
 
         % #########################################################################
-        disp('Training a random forest classifier ...');
+        % disp('Training a random forest classifier ...');
         trainFeat = cat(2,trSE1*maps1{cv_w1,cv_w2},trSE2*maps2{cv_w1,cv_w2});
         NumTrees = 100;
         rng(1); % For reproducibility
@@ -282,15 +292,16 @@ SE1PredOb = reshape(SE1PredOb,size(SE1PredOb,1)*size(SE1PredOb,2),size(SE1PredOb
 SE2PredOb = reshape(SE2PredOb,size(SE2PredOb,1)*size(SE2PredOb,2),size(SE2PredOb,3));
 scoresTmp = zeros(size(SE1PredOb,1),length(Mdl_rf{1}.ClassNames));
 
+disp('Inferencing ...');
+
 tic;
-parpool(3)
+parpool(5)
 parfor cv_m = 1:numel(maps1)
-    disp('Inferencing using random forest ...');
+    disp(['Inferencing using the ',num2str(cv_m),' random forest ...']);
     testFeat = cat(2,SE1PredOb*maps1{cv_m},SE2PredOb*maps2{cv_m});
     % interencing
     [predLab,scores] = predict(Mdl_rf{cv_m},testFeat);
     scoresTmp = scoresTmp + scores;
-%    predLab = cellfun(@str2double,predLab);
 end
 % EnSembling classification results
 [~,pred] = max(scoresTmp,[],2);
@@ -301,6 +312,7 @@ end
 toc;
 %% -------------------------------------------------------------
 %% STEP FOUR: SAVE CLASSIFICATION RESULT IN GEOTIFF FORMAT
+disp('saving the outputs')
 %% -------------------------------------------------------------
 [~,ref] = geotiffread(se1dir);
 info = geotiffinfo(se1dir);
