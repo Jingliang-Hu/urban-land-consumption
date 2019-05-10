@@ -283,7 +283,7 @@ SE2PredOb = reshape(SE2PredOb,size(SE2PredOb,1)*size(SE2PredOb,2),size(SE2PredOb
 scoresTmp = zeros(size(SE1PredOb,1),length(Mdl_rf{1}.ClassNames));
 
 tic;
-parpool(20)
+parpool(3)
 parfor cv_m = 1:numel(maps1)
     disp('Inferencing using random forest ...');
     testFeat = cat(2,SE1PredOb*maps1{cv_m},SE2PredOb*maps2{cv_m});
@@ -315,7 +315,7 @@ lastcol     = labCoord(end,4);
 
 xi = [firstcol - .5, lastcol + .5];
 yi = [firstrow - .5, lastrow + .5];
-[xlimits, ylimits] = intrinsicToWorld(R, xi, yi);
+[xlimits, ylimits] = intrinsicToWorld(ref, xi, yi);
 subR = ref;
 subR.RasterSize = size(clamap);
 subR.XLimWorld = sort(xlimits);
