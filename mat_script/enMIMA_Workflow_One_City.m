@@ -282,6 +282,8 @@ SE1PredOb = reshape(SE1PredOb,size(SE1PredOb,1)*size(SE1PredOb,2),size(SE1PredOb
 SE2PredOb = reshape(SE2PredOb,size(SE2PredOb,1)*size(SE2PredOb,2),size(SE2PredOb,3));
 scoresTmp = zeros(size(SE1PredOb,1),length(Mdl_rf{1}.ClassNames));
 
+tic;
+parpool(20)
 parfor cv_m = 1:numel(maps1)
     disp('Inferencing using random forest ...');
     testFeat = cat(2,SE1PredOb*maps1{cv_m},SE2PredOb*maps2{cv_m});
@@ -296,9 +298,7 @@ idCla = cellfun(@str2double,Mdl_rf{1}.ClassNames);
 for i = 1:length(idCla)
     pred(pred==i) = idCla(i);
 end
-
-
-
+toc;
 %% -------------------------------------------------------------
 %% STEP FOUR: SAVE CLASSIFICATION RESULT IN GEOTIFF FORMAT
 %% -------------------------------------------------------------
@@ -320,7 +320,6 @@ subR = ref;
 subR.RasterSize = size(clamap);
 subR.XLimWorld = sort(xlimits);
 subR.YLimWorld = sort(ylimits);
-
 
 geotiffwrite([outputDir,'/claMap_cLCZ.tif'], uint8(clamap), subR,  ...
 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
