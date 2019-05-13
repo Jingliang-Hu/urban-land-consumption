@@ -28,6 +28,6 @@ for d = 1:dn
     end
     
 end
-tmp = whos;
-mem=memProfile(tmp,'mb')
+% tmp = whos;
+% mem=memProfile(tmp,'mb')
 end

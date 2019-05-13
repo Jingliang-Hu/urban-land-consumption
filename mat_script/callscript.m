@@ -13,6 +13,6 @@ enviPath = '/naslx/projects/pr84ya/ga39lev3/SDG/mat_script';
 addpath(genpath(enviPath));
 
 tic;
-[flag] = enMIMA_Workflow_One_City(cityPath,enviPath);
+[flag] = enMIMA_Workflow_One_City_1(cityPath,enviPath);
 toc;
 
