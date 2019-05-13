@@ -5,10 +5,10 @@
 #SBATCH --get-user-env
 #SBATCH --export=NONE
 #SBATCH --nodes=1-1
-#SBATCH --mem=90000mb
+#SBATCH --mem=240000mb
 #SBATCH --cpus-per-task=64
-#SBATCH --clusters=mpp3
-##SBATCH --partition=teramem_inter
+#SBATCH --clusters=inter
+#SBATCH --partition=teramem_inter
 #SBATCH --export=NONE
 #SBATCH --mail-type=all
 #SBATCH --mail-user=jingliang.hu@dlr.de

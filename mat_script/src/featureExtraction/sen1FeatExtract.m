@@ -33,8 +33,12 @@ for i=1:size(PolFeat,3)
 end
 
 %% statistics
-[ featMean ] = localStat_f( PolFeat,5,'mean' );
-[ featStd ]  = localStat_f( PolFeat,5,'std' );
+% [ featMean ] = localStat_f( PolFeat,5,'mean' );
+% [ featStd ]  = localStat_f( PolFeat,5,'std' );
+% 'localStat_mov' is faster and less memory demanding than 'localStat_f'
+[ featMean ] = localStat_mov( PolFeat,5,'mean' );
+[ featStd ]  = localStat_mov( PolFeat,5,'std' );
+
 se1Feat = cat(3,temp,featMean,featStd);   
 
 end

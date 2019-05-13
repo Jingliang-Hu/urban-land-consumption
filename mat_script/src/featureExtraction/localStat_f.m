@@ -34,8 +34,8 @@ for d = 1:dn
     
 end
 
-
-
+tmp = whos;
+mem=memProfile(tmp,'mb')
 
 end
 

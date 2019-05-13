@@ -15,7 +15,6 @@ function [flag] = enMIMA_Workflow_One_City(cityPath,enviPath)
 %                           directory;
 
 
-restoredefaultpath
 
 %% setting the environmental path
 addpath(genpath(enviPath));
@@ -47,7 +46,7 @@ elseif length(fileName)~=1
     return
 else
     se2dir = [fileName.folder,'/',fileName.name];
-    disp(['The directory to Sentinel-1 data: ',se2dir]);
+    disp(['The directory to Sentinel-2 data: ',se2dir]);
 end
 % directory to label data in GEOTIFF data format
 labdir = [cityPath,'/GT/*.tif'];
@@ -60,7 +59,7 @@ elseif length(fileName)~=1
     return
 else
     labdir = [fileName.folder,'/',fileName.name];
-    disp(['The directory to Sentinel-1 data: ',labdir]);
+    disp(['The directory to ground truth GEOTIFF data: ',labdir]);
 end
 % directory to the output files
 outputDir = [cityPath,'/OUTPUT'];
@@ -294,7 +293,6 @@ scoresTmp = zeros(size(SE1PredOb,1),length(Mdl_rf{1}.ClassNames));
 
 disp('Inferencing ...');
 
-tic;
 parpool(5)
 parfor cv_m = 1:numel(maps1)
     disp(['Inferencing using the ',num2str(cv_m),' random forest ...']);
@@ -309,7 +307,6 @@ idCla = cellfun(@str2double,Mdl_rf{1}.ClassNames);
 for i = 1:length(idCla)
     pred(pred==i) = idCla(i);
 end
-toc;
 %% -------------------------------------------------------------
 %% STEP FOUR: SAVE CLASSIFICATION RESULT IN GEOTIFF FORMAT
 disp('saving the outputs')
