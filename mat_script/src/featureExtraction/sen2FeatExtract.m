@@ -11,10 +11,8 @@ function [ se2Feat ] = sen2FeatExtract( path )
 
 % read data from geotiff file
 [se2data,~]=geotiffread(path);
-if size(se2data,2)>40
-   disp('The dimension of Sentinel-2 data is larger than 40. It is probably a L2A product. Only first 12 dimensions are used.')
-    se2data = se2data(:,:,1:12);
-end
+se2data = se2data(:,:,1:12);
+
 % extract data mask
 mask = sum(se2data,3)==0;
 % apply pca on data

@@ -28,7 +28,7 @@ end
 r = repmat((1:row)',col,1);
 c = repmat(1:col,row,1);
 c = c(:);
-label = im(sub2ind(size(im), r, c));
+label = im(:);
 % load the coordinates of labels
 coord = zeros(length(r),4);
 coord(:,1) = ref.XWorldLimits(1) + (c-1)*ref.CellExtentInWorldX;

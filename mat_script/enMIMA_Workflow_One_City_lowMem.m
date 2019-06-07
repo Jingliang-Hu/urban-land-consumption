@@ -1,12 +1,12 @@
-function [flag] = enMIMA_Workflow_One_City_1(cityPath,enviPath)
+function [flag] = enMIMA_Workflow_One_City_lowMem(cityPath,enviPath)
 % This function implements the ensemble mima for the land cover land use
 % classification.
 %   Input:
 %       - cityPath      -   a directory to a folder, where has three
-%                           subfolders: SE1, SE2, and GT, which contain a 
+%                           subfolders: SE1, SE2, and GT, which contain a
 %                           geotiff file of Sentinel-1, Sentinel-2, and
 %                           ground truth, respectively.
-%       - enviPath      -   a path to a firectory, where lib are stored. 
+%       - enviPath      -   a path to a firectory, where lib are stored.
 %                           '/<directory to git local repo>/mat_script'
 %
 %   Output:
@@ -14,15 +14,14 @@ function [flag] = enMIMA_Workflow_One_City_1(cityPath,enviPath)
 %                           '1' successed: results are saved in the ouput
 %                           directory;
 
-
-
 %% setting the environmental path
 addpath(genpath(enviPath));
 flag = 0;
-
 %% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % directory setting
 % directory to Sentinel-1 analysis-ready data in GEOTIFF data format
+disp('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+disp('+++++++++++++++++++++ Setting Directories ++++++++++++++++++++++++++');
 se1dir = [cityPath,'/SE1/*.tif'];
 fileName = dir(se1dir);
 if isempty(fileName)
@@ -68,103 +67,114 @@ if ~isfolder(outputDir)
 end
 disp(['The output directory was set to: ',outputDir]);
 
+% temporary data file
+datTmpDir = [outputDir,'/datTmp.mat'];
+disp(['The temporary data file was set to: ',datTmpDir]);
+disp('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+disp('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+
+
 %% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%  SE1 feature extraction
+if isfile(datTmpDir)
+    load(datTmpDir,'OKse1Feat')
+    if exist('OKse1Feat','var')
+        disp('-------------------------------------------------------------');
+        disp('SE1 feature extracted ...')
+    else
+        disp('-------------------------------------------------------------');
+        disp('loading SE1 data, feature extraction ...')
+        [ ~ ] = sen1FeatExtractMem( se1dir, datTmpDir);
+        OKse1Feat = 1;
+        save(datTmpDir,'OKse1Feat','-append')
+    end
+else
+    disp('-------------------------------------------------------------');
+    disp('loading SE1 data, feature extraction ...')
+    [ ~ ] = sen1FeatExtractMem( se1dir, datTmpDir);
+    OKse1Feat = 1;
+    save(datTmpDir,'OKse1Feat','-append')
+end
+
+
+%% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%  SE2 feature extraction
+if isfile(datTmpDir)
+    load(datTmpDir,'OKse2Feat')
+    if exist('OKse2Feat','var')
+        disp('-------------------------------------------------------------');
+        disp('SE2 feature extracted ...')
+    else
+        disp('-------------------------------------------------------------');
+        disp('loading SE2 data, feature extraction ...')
+        [ ~ ] = sen2FeatExtractMem( se2dir, datTmpDir);
+        OKse2Feat = 1;
+        save(datTmpDir,'OKse2Feat','-append')
+    end
+else
+    disp('-------------------------------------------------------------');
+    disp('loading SE2 data, feature extraction ...')
+    [ ~ ] = sen2FeatExtractMem( se2dir, datTmpDir);
+    OKse2Feat = 1;
+    save(datTmpDir,'OKse2Feat','-append')
+end
+
+
+
+load(datTmpDir,'OKmodel')
+if ~exist('OKmodel','var')
+%% 
+disp('-------------------------------------------------------------');
+disp('loading locations of labeled data ...')
 patchSize = 0;
-
-
-%% -------------------------------------------------------------
-%% STEP ONE: Find data with labels
-disp('-------------------------------------------------------------');
-disp(' Find locations of labeled data ...')
-%% -------------------------------------------------------------
-% load data the geolocation, sentinel-1 image location, and sentinel-2 image location of labeled data
 [ labCoord, lab ] = getROICoordinate( labdir,se1dir,se2dir,patchSize );
-
-%% -------------------------------------------------------------
-%% STEP TOW: feature extraction of Sentinel-1 data
+trIdx = lab>0;
+trLab = lab(trIdx);
+%%
 disp('-------------------------------------------------------------');
-disp('loading SE1 data, feature extraction ...')
-%% -------------------------------------------------------------
-% feature extraction for sentinel-1
-[ se1Feat ] = sen1FeatExtract( se1dir );
+disp('prep SE1 data for training ...')
+load(datTmpDir,'se1Feat');
 se1sz = size(se1Feat);
-se1LabIdx = sub2ind(se1sz(1:2),labCoord(:,3),labCoord(:,4));
-SE1tmp = reshape(se1Feat,se1sz(1)*se1sz(2),se1sz(3)); 
-clear se1Feat
+se1Feat = reshape(se1Feat,se1sz(1)*se1sz(2),se1sz(3));
+tmpIdx = sub2ind(se1sz(1:2),labCoord(:,3),labCoord(:,4));
 
-% Sentinel-1 data preprocessing, dB scaling and mean-std normalization
-SE1tmp(:,[1:21,29:31,33:35]) = log10(SE1tmp(:,[1:21,29:31,33:35]));
-SE1tmp = zscore(SE1tmp);
-se1Observ = SE1tmp(se1LabIdx,:);
-
-% load SE1 data for inferencing and save it into temperary data file
-SE1tmp = reshape(SE1tmp,se1sz(1),se1sz(2),se1sz(3));
-SE1PredOb = SE1tmp(labCoord(1,3):labCoord(end,3),labCoord(1,4):labCoord(end,4),:);
-clear SE1tmp se1LabIdx
-save([outputDir,'/datTmp.mat'],'SE1PredOb','labCoord','se1dir','-v7.3');
-clear SE1PredOb
-disp('loading SE1 data, DONE')
-
-
-%% -------------------------------------------------------------
-%% STEP Three: feature extraction of Sentinel-2 data
-disp('-------------------------------------------------------------');
-disp('loading SE2 data, feature extraction ...')
-%% -------------------------------------------------------------
-% feature extraction for sentinel-2
-[ se2Feat ] = sen2FeatExtract( se2dir );
-se2sz = size(se2Feat);
-se2LabIdx = sub2ind(se2sz(1:2),labCoord(:,5),labCoord(:,6));
-SE2tmp = reshape(se2Feat,se2sz(1)*se2sz(2),se2sz(3)); 
-clear se2Feat 
-
-% Sentinel-2 data preprocessing, mean-std normalization
-SE2tmp = zscore(SE2tmp);
-se2Observ = SE2tmp(se2LabIdx,:);
-
-% load SE2 data for inferencing and save it into temperary data file
-SE2tmp = reshape(SE2tmp,se2sz(1),se2sz(2),se2sz(3)); 
-SE2PredOb = SE2tmp(labCoord(1,5):labCoord(end,5),labCoord(1,6):labCoord(end,6),:);
-clear se2LabIdx SE2tmp
-save([outputDir,'/datTmp.mat'],'SE2PredOb','-append')
-clear SE2PredOb
-disp('loading SE2 data, DONE')
-
-
-%% -------------------------------------------------------------
-%% STEP FOUR: MIMA data organization
-disp('-------------------------------------------------------------');
-disp(' MIMA data organization ...')
-%% -------------------------------------------------------------
-
-% get the index of all data with label
-trIndex = lab>0;
-% get the label of labeled data
-trLab = lab(trIndex);
-% get the labeled and unlabeled setinel-1 data
-trSE1 = se1Observ( trIndex,:);
-unSE1 = se1Observ(~trIndex,:);
-% get the labeled and unlabeled setinel-2 data
-trSE2 = se2Observ( trIndex,:);
-unSE2 = se2Observ(~trIndex,:);
-
+trSE1 = se1Feat(tmpIdx( trIdx),:);
+unSE1 = se1Feat(tmpIdx(~trIdx),:);clear se1Feat;
 % randomly get a part of unlabeled data to avoid huge requirement on memory, randomly yet in reproductive manner
 % 'tms' gives the number of times regarding the number of unlabeled data comparing to the number of labeled data
-tms = 2;
+
+tms = 1;
 rng(1);
 [~,order] = sort(randn(size(unSE1,1),1));
 unSE1 = unSE1(order(1:tms*size(trSE1,1)),:);
+
+%%
+disp('-------------------------------------------------------------');
+disp('prep SE2 data for training ...')
+load(datTmpDir,'se2Feat');
+se2sz = size(se2Feat);
+se2Feat = reshape(se2Feat,se2sz(1)*se2sz(2),se2sz(3));
+tmpIdx = sub2ind(se2sz(1:2),labCoord(:,5),labCoord(:,6));
+save(datTmpDir,'labCoord','lab','labdir','se1dir','se2dir','-append')
+
+
+trSE2 = se2Feat(tmpIdx( trIdx),:);
+unSE2 = se2Feat(tmpIdx(~trIdx),:);clear se2Feat;
+
+% randomly get a part of unlabeled data to avoid huge requirement on memory, randomly yet in reproductive manner
+% 'tms' gives the number of times regarding the number of unlabeled data comparing to the number of labeled data
 unSE2 = unSE2(order(1:tms*size(trSE1,1)),:);
+
+
 
 % re-organizing sentinel-1 and sentinel-2 data
 se1Data = cat(1,trSE1,unSE1);
 se2Data = cat(1,trSE2,unSE2);
-clear order trIndex unSE1 unSE2
+clear order trIdx unSE1 unSE2
 
 
-%% -------------------------------------------------------------
-% STEP FIVE: EnMIMA
-%% -------------------------------------------------------------
+%% EnMIMA
+disp('-------------------------------------------------------------');
 disp('Extracting MIMA topological structure ...')
 % ++++++++++++++++++++++++++++++++++++++++++++++++++++
 % EnMIMA parameter setting
@@ -292,60 +302,26 @@ for cv_w1 = 1:numel(W1)
 end
 
 % save trained projections and classifiers
-save([outputDir,'/datTmp.mat'],'maps1','maps2','Mdl_rf','-append')
-clearvars -except outputDir
-load([outputDir,'/datTmp.mat'])
-
-SE1PredOb = reshape(SE1PredOb,size(SE1PredOb,1)*size(SE1PredOb,2),size(SE1PredOb,3));
-SE2PredOb = reshape(SE2PredOb,size(SE2PredOb,1)*size(SE2PredOb,2),size(SE2PredOb,3));
-scoresTmp = zeros(size(SE1PredOb,1),length(Mdl_rf{1}.ClassNames));
-
-disp('Inferencing ...');
-
-parpool(2)
-parfor cv_m = 1:numel(maps1)
-    disp(['Inferencing using the ',num2str(cv_m),' random forest ...']);
-    testFeat = cat(2,SE1PredOb*maps1{cv_m},SE2PredOb*maps2{cv_m});
-    % interencing
-    [predLab,scores] = predict(Mdl_rf{cv_m},testFeat);
-    scoresTmp = scoresTmp + scores;
+OKmodel = 1;
+save(datTmpDir,'maps1','maps2','Mdl_rf','OKmodel','-append')
+clearvars -except datTmpDir
+else
+disp('-------------------------------------------------------------');
+disp('models have already been trained')
 end
-% EnSembling classification results
-[~,pred] = max(scoresTmp,[],2);
-idCla = cellfun(@str2double,Mdl_rf{1}.ClassNames);
-for i = 1:length(idCla)
-    pred(pred==i) = idCla(i);
+
+
+load(datTmpDir,'OKclaMap')
+if ~exist('OKclaMap','var')
+    [flag] = enMIMA_Inference(datTmpDir);
+%elseif OKclaMap == 1
+%    colStartPoint = 1;
+%    save(datTmpDir,'colStartPoint','-append')
+%    [flag] = enMIMA_Inference(datTmpDir);
+else
+    disp('-------------------------------------------------------------');
+    disp('Classification map has already been produced')
 end
-%% -------------------------------------------------------------
-%% STEP FOUR: SAVE CLASSIFICATION RESULT IN GEOTIFF FORMAT
-disp('saving the outputs')
-%% -------------------------------------------------------------
-[~,ref] = geotiffread(se1dir);
-info = geotiffinfo(se1dir);
 
-clamap = reshape(pred,labCoord(end,3)-labCoord(1,3)+1,labCoord(end,4)-labCoord(1,4)+1);
-clamap_col = label2color(clamap,'lcz');
-
-firstrow    = labCoord(1,3);
-lastrow     = labCoord(end,3);
-firstcol    = labCoord(1,4);
-lastcol     = labCoord(end,4);
-
-xi = [firstcol - .5, lastcol + .5];
-yi = [firstrow - .5, lastrow + .5];
-[xlimits, ylimits] = intrinsicToWorld(ref, xi, yi);
-subR = ref;
-subR.RasterSize = size(clamap);
-subR.XLimWorld = sort(xlimits);
-subR.YLimWorld = sort(ylimits);
-
-geotiffwrite([outputDir,'/claMap_cLCZ.tif'], uint8(clamap), subR,  ...
-'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
-
-geotiffwrite([outputDir,'/claMap_cLCZ_col.tif'], uint8(clamap_col), subR,  ...
-'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
-
-clear
-flag = 1;
-system('touch OK.finish')
 end
+
