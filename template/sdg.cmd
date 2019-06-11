@@ -12,7 +12,7 @@
 #SBATCH --export=NONE
 #SBATCH --mail-type=all
 #SBATCH --mail-user=jingliang.hu@dlr.de
-#SBATCH --time=30:00:00
+#SBATCH --time=48:00:00
 
 source /etc/profile.d/modules.sh
 export OMP_NUM_THREADS=64

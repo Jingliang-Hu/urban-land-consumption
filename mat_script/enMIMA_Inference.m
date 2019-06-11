@@ -76,7 +76,11 @@ else
 end
 colStart = colStartPoint;
 % for loop for tiling and inferencing
+disp('-------------------------------------------------------------');
+disp('Pointing to the temporary mat file ...')
 matObj = matfile(datTmpDir);
+disp('-------------------------------------------------------------');
+disp('Start inferencing')
 for colIdx = colStart:horizonTiles
     se1ColStart = (labCoord(idxFC,4) - 1) + colIntvl(colIdx);
     se1ColEnd   = (labCoord(idxFC,4) - 1) + (colIntvl(colIdx + 1) - 1);
@@ -101,7 +105,8 @@ for colIdx = colStart:horizonTiles
         disp('parallel inferencing ...')
         % parallel inferencing
         scoEnsemble = zeros(size(se1Tile,1),length(Mdl_rf{1}.ClassNames));
-        parpool(5)
+        par = parpool(5);
+        par.IdleTimeout = 600;
         parfor cv_m = 1:numel(maps1)
             testFeat = cat(2,se1Tile*maps1{cv_m},se2Tile*maps2{cv_m});
             [~,scores] = predict(Mdl_rf{cv_m},testFeat);
