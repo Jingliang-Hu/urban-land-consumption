@@ -156,7 +156,7 @@ numbnd = size(matObj.se2Feat,3);
 for se2BndProcessed = bndStart:numbnd
     tmp = matObj.se2Feat(:,:,se2BndProcessed);    
     matObj.se2Feat(:,:,se2BndProcessed) = zscore(tmp);    
-    save(matPath,se2BndProcessed,'-append');
+    save(matPath,'se2BndProcessed','-append');
     disp(['The ',num2str(se2BndProcessed),'th band is normalized'])
 end
 flag = 0;

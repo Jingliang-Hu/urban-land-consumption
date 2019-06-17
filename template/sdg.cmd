@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -o sdg_job.%j.%N.out
+#SBATCH -o sdg_output.%j.%N.out
 #SBATCH -D ./ 
 #SBATCH -J LCZ4SDG 
 #SBATCH --get-user-env
@@ -20,3 +20,6 @@ module load matlab
 
 matlab -nodesktop -nosplash -nodisplay -r "cd('SDG_ROOT_DUMMY/mat_script'); try enMIMA_Workflow_One_City_lowMem('CITY_DIR_DUMMY', 'SDG_ROOT_DUMMY/mat_script'); catch; end; exit"
 #        !! Angabe des MATLAB-Skript in der -r Option ohne die Endung .m !!!
+
+## matlab -nodesktop -nosplash -nodisplay -r "cd('SDG_ROOT_DUMMY/mat_script'); try SDG_Output('CITY_DIR_DUMMY', 'SDG_ROOT_DUMMY/mat_script'); catch; end; exit"
+

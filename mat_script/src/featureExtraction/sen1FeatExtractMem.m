@@ -156,7 +156,7 @@ for se1BndProcessed = bndStart:numbnd
         tmp = log10(tmp);
     end
     matObj.se1Feat(:,:,se1BndProcessed) = zscore(tmp);    
-    save(matPath,se1BndProcessed,'-append');
+    save(matPath,'se1BndProcessed','-append');
     disp(['The ',num2str(se1BndProcessed),'th band is preprocessed'])
 end
 flag = 0;

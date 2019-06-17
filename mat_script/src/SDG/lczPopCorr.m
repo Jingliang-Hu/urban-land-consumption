@@ -1,13 +1,27 @@
 function [spatilCorrelation] = lczPopCorr(lczTif,popTif)
 
+
+
 % popTif = '/naslx/projects/pr84ya/ga39lev3/SDG/mat_script/data/LCZ42_21671_Tokyo/LCZ42_21671_Tokyo_POP.tif';
 % lczTif = '/naslx/projects/pr84ya/ga39lev3/SDG/mat_script/data/LCZ42_21671_Tokyo/LCZ42_21671_Tokyo_CLCZ.tif';
-
+disp('load lcz data ...')
 lcz = single(geotiffread(lczTif));
+lcz(lcz==1) = 4;
+lcz(lcz==6) = 3;
+lcz(lcz==7) = 4;
+lcz(lcz==8) = 2;
+lcz(lcz==107) = 0;
+lcz(lcz>10) = 1;
+
+disp('load population data ...')
 pop = single(geotiffread(popTif));
+edge = quantile(pop(:),0:.2:1);
+pop = discretize(pop,edge);
+
 noDataValue = -10;
 
 % set up neighborhood
+disp('Set up the neighborhood kernel ...')
 res = 10;
 neighborDist = 2000; % meter
 neighborPix  = neighborDist/res;
@@ -21,9 +35,13 @@ neighborKernel = [  neighborKernel,                                             
 
 
 % initial output
+disp('parallel computing ... ')
 spatilCorrelation = zeros(size(pop),'single');
-a = parpool(28);
+num_core = feature('numcores');
+a = parpool(num_core);
 a.IdleTimeout = 200;
+disp([num2str(num_core),' cores are activated and work in parallel ...'])
+
 for cv_row = 1:size(spatilCorrelation,1)
     parfor cv_col = 1:size(spatilCorrelation,2)
         idx = circshift(neighborKernel,[cv_row,cv_col]);
@@ -36,7 +54,7 @@ for cv_row = 1:size(spatilCorrelation,1)
 end
 delete(gcp('nocreate'));       
 
-
-spatilCorrelation(lcz(:)==107) = noDataValue;                
+disp('parallel computing done')
+spatilCorrelation(lcz(:)==0) = noDataValue;                
 
 end

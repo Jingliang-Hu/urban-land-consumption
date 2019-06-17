@@ -5,19 +5,19 @@
 #SBATCH --get-user-env
 #SBATCH --export=NONE
 #SBATCH --nodes=1-1
-#SBATCH --mem=20000mb
+#SBATCH --mem=50000mb
 #SBATCH --cpus-per-task=64
 #SBATCH --clusters=mpp3
 #SBATCH --export=NONE
 #SBATCH --mail-type=all
 #SBATCH --mail-user=jingliang.hu@dlr.de
-#SBATCH --time=3:00:00
+#SBATCH --time=10:00:00
 
 source /etc/profile.d/modules.sh
 export OMP_NUM_THREADS=64
 module load matlab
 
-matlab -nodesktop -nosplash -nodisplay -r test_script
+matlab -nodesktop -nosplash -nodisplay -r test_script8
 
 
 #        !! Angabe des MATLAB-Skript in der -r Option ohne die Endung .m !!!
