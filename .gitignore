@@ -15,3 +15,8 @@ mat_script/src/MAPPER/examples
 # ignore tiff data files
 *.tif
 *.tiff
+
+# ignore testing script of linux cluster
+mat_script/testSDG
+*.cmd
+
