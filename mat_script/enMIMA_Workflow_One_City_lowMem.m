@@ -318,6 +318,8 @@ if ~exist('OKclaMap','var')
 %    colStartPoint = 1;
 %    save(datTmpDir,'colStartPoint','-append')
 %    [flag] = enMIMA_Inference(datTmpDir);
+    system(['touch ',cityPath,'/OK.finish'])
+
 else
     disp('-------------------------------------------------------------');
     disp('Classification map has already been produced')

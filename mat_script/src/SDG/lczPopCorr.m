@@ -15,6 +15,8 @@ lcz(lcz>10) = 1;
 
 disp('load population data ...')
 pop = single(geotiffread(popTif));
+popTmp = imresize(pop,size(lcz),'nearest');
+pop = popTmp*sum(pop(:))/sum(popTmp(:)); clear popTmp;
 edge = quantile(pop(:),0:.2:1);
 pop = discretize(pop,edge);
 
@@ -37,7 +39,8 @@ neighborKernel = [  neighborKernel,                                             
 % initial output
 disp('parallel computing ... ')
 spatilCorrelation = zeros(size(pop),'single');
-num_core = feature('numcores');
+% num_core = feature('numcores');
+num_core = 40;
 a = parpool(num_core);
 a.IdleTimeout = 200;
 disp([num2str(num_core),' cores are activated and work in parallel ...'])
@@ -46,15 +49,15 @@ for cv_row = 1:size(spatilCorrelation,1)
     parfor cv_col = 1:size(spatilCorrelation,2)
         idx = circshift(neighborKernel,[cv_row,cv_col]);
         tmp = corrcoef(lczPad(idx(:)),popPad(idx(:)));
-        spatilCorrelation(cv_row,cv_col) = tmp(1,2);        
+        spatilCorrelation(cv_row,cv_col) = tmp(1,2);
     end
     if mod(cv_row,ceil(size(spatilCorrelation,1)/10)) == 0
         disp([num2str(cv_row/size(spatilCorrelation,1)*100),' % is done ...']);
     end
 end
-delete(gcp('nocreate'));       
+delete(gcp('nocreate'));
 
 disp('parallel computing done')
-spatilCorrelation(lcz(:)==0) = noDataValue;                
+spatilCorrelation(lcz(:)==0) = noDataValue;
 
 end
