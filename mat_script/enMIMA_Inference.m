@@ -18,6 +18,9 @@ end
 
 % 
 load(datTmpDir,'labCoord','se1dir');
+strTmp = strsplit(se1dir,'/');
+strTmp = strTmp{end};
+se1dir = strrep(datTmpDir,'OUTPUT/datTmp.mat',['SE1/',strTmp]);
 
 % initial output classification map
 [~,ref] = geotiffread(se1dir);

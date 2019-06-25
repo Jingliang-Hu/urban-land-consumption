@@ -321,6 +321,7 @@ if ~exist('OKclaMap','var')
     system(['touch ',cityPath,'/OK.finish'])
 
 else
+    system(['touch ',cityPath,'/OK.finish'])
     disp('-------------------------------------------------------------');
     disp('Classification map has already been produced')
 end

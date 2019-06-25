@@ -17,8 +17,6 @@ disp('load population data ...')
 pop = single(geotiffread(popTif));
 popTmp = imresize(pop,size(lcz),'nearest');
 pop = popTmp*sum(pop(:))/sum(popTmp(:)); clear popTmp;
-edge = quantile(pop(:),0:.2:1);
-pop = discretize(pop,edge);
 
 noDataValue = -10;
 
