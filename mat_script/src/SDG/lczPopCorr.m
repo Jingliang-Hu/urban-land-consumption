@@ -6,10 +6,10 @@ function [spatilCorrelation] = lczPopCorr(lczTif,popTif)
 % lczTif = '/naslx/projects/pr84ya/ga39lev3/SDG/mat_script/data/LCZ42_21671_Tokyo/LCZ42_21671_Tokyo_CLCZ.tif';
 disp('load lcz data ...')
 lcz = single(geotiffread(lczTif));
-lcz(lcz==1) = 4;
-lcz(lcz==6) = 3;
-lcz(lcz==7) = 4;
-lcz(lcz==8) = 2;
+lcz(lcz==1) = 9;
+lcz(lcz==6) = 6;
+lcz(lcz==7) = 9;
+lcz(lcz==8) = 3;
 lcz(lcz==107) = 0;
 lcz(lcz>10) = 1;
 
@@ -29,6 +29,7 @@ neighborKernel = strel('sphere',neighborPix);
 neighborKernel = neighborKernel.Neighborhood(:,:,neighborPix+1);
 
 lczPad = padarray(lcz,[neighborPix,neighborPix],'symmetric');
+waterMask = lczPad > 0;
 popPad = padarray(pop,[neighborPix,neighborPix],'symmetric');
 neighborKernel = [  neighborKernel,                                                     zeros(size(neighborKernel,1),size(lczPad,2)-size(neighborKernel,2));...
                     zeros(size(lczPad,1)-size(neighborKernel,1),size(neighborKernel,2)),        zeros(size(lczPad,1)-size(neighborKernel,1),size(lczPad,2)-size(neighborKernel,2))]==1;
@@ -38,17 +39,17 @@ neighborKernel = [  neighborKernel,                                             
 disp('parallel computing ... ')
 spatilCorrelation = zeros(size(pop),'single');
 % num_core = feature('numcores');
-num_core = 40;
+num_core = 20;
 a = parpool(num_core);
-a.IdleTimeout = 200;
+a.IdleTimeout = 6000;
 disp([num2str(num_core),' cores are activated and work in parallel ...'])
 
-for cv_row = 1:size(spatilCorrelation,1)
+for cv_row = 1:size(spatilCorrelation,1)    
     parfor cv_col = 1:size(spatilCorrelation,2)
-        idx = circshift(neighborKernel,[cv_row,cv_col]);
+        idx = circshift(neighborKernel,[cv_row,cv_col])&waterMask;
         tmp = corrcoef(lczPad(idx(:)),popPad(idx(:)));
         spatilCorrelation(cv_row,cv_col) = tmp(1,2);
-    end
+    end    
     if mod(cv_row,ceil(size(spatilCorrelation,1)/10)) == 0
         disp([num2str(cv_row/size(spatilCorrelation,1)*100),' % is done ...']);
     end
