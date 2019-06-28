@@ -18,7 +18,7 @@ pop = single(geotiffread(popTif));
 popTmp = imresize(pop,size(lcz),'nearest');
 pop = popTmp*sum(pop(:))/sum(popTmp(:)); clear popTmp;
 
-noDataValue = -10;
+noDataValue = 0;
 
 % set up neighborhood
 disp('Set up the neighborhood kernel ...')
@@ -39,7 +39,7 @@ neighborKernel = [  neighborKernel,                                             
 disp('parallel computing ... ')
 spatilCorrelation = zeros(size(pop),'single');
 % num_core = feature('numcores');
-num_core = 20;
+num_core = 3;
 a = parpool(num_core);
 a.IdleTimeout = 6000;
 disp([num2str(num_core),' cores are activated and work in parallel ...'])
@@ -47,9 +47,12 @@ disp([num2str(num_core),' cores are activated and work in parallel ...'])
 for cv_row = 1:size(spatilCorrelation,1)    
     parfor cv_col = 1:size(spatilCorrelation,2)
         idx = circshift(neighborKernel,[cv_row,cv_col])&waterMask;
+        if sum(idx(:))<5
+            continue;
+        end
         tmp = corrcoef(lczPad(idx(:)),popPad(idx(:)));
         spatilCorrelation(cv_row,cv_col) = tmp(1,2);
-    end    
+    end
     if mod(cv_row,ceil(size(spatilCorrelation,1)/10)) == 0
         disp([num2str(cv_row/size(spatilCorrelation,1)*100),' % is done ...']);
     end
