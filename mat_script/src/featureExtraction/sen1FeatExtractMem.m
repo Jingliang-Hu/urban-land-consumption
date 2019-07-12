@@ -152,11 +152,14 @@ matObj = matfile(matPath,'Writable',true);
 dBbnd = [1:21,29:31,33:35];
 numbnd = 36;
 for se1BndProcessed = bndStart:numbnd
-    tmp = matObj.se1Feat(:,:,se1BndProcessed);
+    datInBnd = matObj.se1Feat(:,:,se1BndProcessed);
     if sum(se1BndProcessed==dBbnd)
+        tmp = datInBnd(datInBnd(:)~=0);
         tmp = log10(tmp);
+        datInBnd(datInBnd(:)~=0) = tmp;
+        clear tmp
     end
-    matObj.se1Feat(:,:,se1BndProcessed) = zscore(tmp);    
+    matObj.se1Feat(:,:,se1BndProcessed) = zscore(datInBnd);    
     save(matPath,'se1BndProcessed','-append');
     disp(['The ',num2str(se1BndProcessed),'th band is preprocessed'])
 end
