@@ -5,8 +5,9 @@ function [ se1Feat ] = sen1FeatExtractMem( path, datTmpPath )
 %       - datTmpPath        -- directory to a mat temporary data file
 %   - Output:
 %       - se1Feat           -- extracted PolSAR feature
-
-load(datTmpPath,'se1BndProcessed');
+if isfile(datTmpPath)
+    load(datTmpPath,'se1BndProcessed');
+end
 if ~exist('se1BndProcessed','var')
     % set the directory to a temporary file for data saving
     info = geotiffinfo(path);

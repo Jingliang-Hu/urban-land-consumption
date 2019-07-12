@@ -5,8 +5,9 @@ function [ se2Feat ] = sen2FeatExtractMem( path, datTmpPath )
 %       - datTmpPath        -- directory to a mat temporary data file
 %   - Output:
 %       - se2Feat           -- extracted sentinel-2 feature
-
-load(datTmpPath,'se2BndProcessed');
+if isfile(datTmpPath)
+    load(datTmpPath,'se2BndProcessed');
+end
 if ~exist('se2BndProcessed','var')
     % read data from geotiff file
     [MSI,~]=geotiffread(path);

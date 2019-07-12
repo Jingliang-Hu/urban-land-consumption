@@ -82,8 +82,13 @@ colStart = colStartPoint;
 disp('-------------------------------------------------------------');
 disp('Pointing to the temporary mat file ...')
 matObj = matfile(datTmpDir);
+
 disp('-------------------------------------------------------------');
 disp('Start inferencing')
+disp('open parallel computing session ...')
+par = parpool(5);
+par.IdleTimeout = 1000;
+
 for colIdx = colStart:horizonTiles
     se1ColStart = (labCoord(idxFC,4) - 1) + colIntvl(colIdx);
     se1ColEnd   = (labCoord(idxFC,4) - 1) + (colIntvl(colIdx + 1) - 1);
@@ -105,17 +110,14 @@ for colIdx = colStart:horizonTiles
         se1Tile = reshape(se1Tile,size(se1Tile,1)*size(se1Tile,2),size(se1Tile,3));
         se2Tile = reshape(se2Tile,size(se2Tile,1)*size(se2Tile,2),size(se2Tile,3));
 
-        disp('parallel inferencing ...')
         % parallel inferencing
         scoEnsemble = zeros(size(se1Tile,1),length(Mdl_rf{1}.ClassNames));
-        par = parpool(5);
-        par.IdleTimeout = 600;
+        par.IdleTimeout = 1000;
         parfor cv_m = 1:numel(maps1)
             testFeat = cat(2,se1Tile*maps1{cv_m},se2Tile*maps2{cv_m});
             [~,scores] = predict(Mdl_rf{cv_m},testFeat);
             scoEnsemble = scoEnsemble + scores;
         end
-        delete(gcp('nocreate'));
         
         disp('ensembling ...')
         % EnSembling classification results
@@ -132,6 +134,7 @@ for colIdx = colStart:horizonTiles
     colStartPoint = colIdx + 1;
     save(datTmpDir,'colStartPoint','-append')
 end
+delete(gcp('nocreate'));
 
 % save output geotiff
 OKclaMap = 1;
