@@ -304,7 +304,7 @@ end
 % save trained projections and classifiers
 OKmodel = 1;
 save(datTmpDir,'maps1','maps2','Mdl_rf','OKmodel','-append')
-clearvars -except datTmpDir
+clearvars -except datTmpDir cityPath
 else
 disp('-------------------------------------------------------------');
 disp('models have already been trained')
