@@ -21,7 +21,6 @@ if flag == 's1'
         if all(all(mask(outCoord(i,3)-ceil(patchSize/2):outCoord(i,3)+ceil(patchSize/2),outCoord(i,4)-ceil(patchSize/2):outCoord(i,4)+ceil(patchSize/2))))==0
             outCoord(i,:) = [];
             outLabel(i,:) = [];
-            i
         end
     end
 elseif flag == 's2'
