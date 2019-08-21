@@ -20,3 +20,5 @@ mat_script/src/MAPPER/examples
 mat_script/testSDG
 *.cmd
 
+# ignore csv data file
+*.csv
