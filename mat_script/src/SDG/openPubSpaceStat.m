@@ -24,7 +24,9 @@ disp('extract open public space ...')
 % load population data
 disp('load population data ...')
 pop = single(geotiffread(popTif));
-popTmp = imresize(pop,size(lcz),'nearest');
+lcz = geotiffread(lczTif);
+sz = size(lcz);clear lcz;
+popTmp = imresize(pop,sz,'nearest');
 pop = popTmp*sum(pop(:))/sum(popTmp(:)); clear popTmp;
 
 noDataValue = min(meanDist2OPS(:));
@@ -35,7 +37,7 @@ opsStat = [0:.2:1;zeros(1,6);zeros(1,6)];
 
 datTmp = meanDist2OPS;
 datTmp(datTmp==noDataValue) = [];
-mdStat(2,:) = quantile(datTmp,mdStat(1,:));
+mdStat(2,:) = quantile(datTmp(:),mdStat(1,:));
 for i = 2:size(mdStat,2)
     mask = (meanDist2OPS>=mdStat(2,i-1))&(meanDist2OPS<=mdStat(2,i));
     mdStat(3,i) = sum(pop(mask(:)))/sum(pop(:));
@@ -44,7 +46,7 @@ end
 
 datTmp = opsAreaOPS;
 datTmp(datTmp==noDataValue) = [];
-opsStat(2,:) = quantile(datTmp,opsStat(1,:));
+opsStat(2,:) = quantile(datTmp(:),opsStat(1,:));
 for i = 2:size(opsStat,2)
     mask = (opsAreaOPS>=opsStat(2,i-1))&(opsAreaOPS<=opsStat(2,i));
     opsStat(3,i) = sum(pop(mask(:)))/sum(pop(:));

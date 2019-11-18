@@ -39,7 +39,7 @@ neighborKernel = [  neighborKernel,                                             
 disp('parallel computing ... ')
 spatilCorrelation = zeros(size(pop),'single');
 % num_core = feature('numcores');
-num_core = 3;
+num_core = 20;
 a = parpool(num_core);
 a.IdleTimeout = 6000;
 disp([num2str(num_core),' cores are activated and work in parallel ...'])

@@ -1,4 +1,4 @@
-function [opsShare,meanDist2OPS,opsAreaOPS] = openPubSpace(lczTif)
+function [opsShare,meanDist2OPS,opsAreaOPS,opsCenter] = openPubSpace1(lczTif)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %   - output
@@ -7,7 +7,7 @@ function [opsShare,meanDist2OPS,opsAreaOPS] = openPubSpace(lczTif)
 %       - opsAreaOPS    -- a map shows the area of accessible OPS, within 2 kilometers, unit in square meter (m²)
 %
 %
-noDataValue = -10;
+% noDataValue = -10;
 
 % lczTif = 'OUTPUT/claMap_cLCZ.tif';
 
@@ -46,8 +46,10 @@ opsCount(opsCount<10) = 0;
 mask = opsCount==0;
 meanDist2OPS = opsDist./opsCount;
 meanDist2OPS(mask(:)) = max(distKernel(:));
-meanDist2OPS(lcz==107) = noDataValue;
+% meanDist2OPS(lcz==107) = noDataValue;
 
 opsAreaOPS = opsCount * 100;
-opsAreaOPS(lcz==107) = noDataValue;
+% opsAreaOPS(lcz==107) = noDataValue;
+
+opsCenter = (opsCount>4e4)+(meanDist2OPS<1000);
 end
