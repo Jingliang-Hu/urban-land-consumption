@@ -22,3 +22,8 @@ mat_script/testSDG
 
 # ignore csv data file
 *.csv
+
+
+# ignore python complied files
+*.pyc
+
