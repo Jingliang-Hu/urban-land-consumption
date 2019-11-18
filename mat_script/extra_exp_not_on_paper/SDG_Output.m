@@ -23,7 +23,7 @@ disp('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
 disp('+++++++++++++++++++++ Setting Directories ++++++++++++++++++++++++++');
 
 % directory to the population data
-popDir = [cityPath,'/POP/*.tif'];
+popDir = [cityPath,'/POP/*POP_22km.tif'];
 fileName = dir(popDir);
 if isempty(fileName)
     disp('The Population GEOTIFF data does not exist!');
@@ -46,13 +46,11 @@ datTmpDir = [outputDir,'/datTmp.mat'];
 disp(['The temporary data file was set to: ',datTmpDir]);
 
 % clcz geotiff file
-clamapTifDir = [outputDir,'/claMap_cLCZ.tif'];
+clamapTifDir = [outputDir,'/claMap_cLCZ_22km.tif'];
 disp(['The temporary data file was set to: ',clamapTifDir]);
 
 disp('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
 disp('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-
-%% calculate SDG index
 
 load(datTmpDir,'OKclaMap')
 if ~exist('OKclaMap','var')
@@ -64,27 +62,43 @@ if ~exist(clamapTifDir,'file')
     disp('the classification map tiff file not found!')
     return
 end
+%% get the city code
+cityCode = strsplit(cityPath,'/');
+cityCode = cityCode{end};
+disp(['~~~ working on the city: ',cityCode,' ~~~'])
+disp([outputDir,'/SDG_STAT.mat'])
 
+%{
 
+%% calculate open public space, and saving
 disp('Calculating SDG: open public space ...')
-[opsShare,meanDist2OPS,opsAreaOPS] = openPubSpace(clamapTifDir);
-
-
-%% saving SDG outputs
+% [opsDistriFeat, opsShare, popTotal, ops, meanDist2OPS, opsLandPerc, opsPopPerc] = openPubSpaceDistribution(clamapTifDir,popDir);
 
 disp('Saving open public space SDG ...')
 [~,ref] = geotiffread(clamapTifDir);
 info = geotiffinfo(clamapTifDir);
-geotiffwrite([outputDir,'/meanDist2OPS.tif'],meanDist2OPS,ref, 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
-geotiffwrite([outputDir,'/areaOPS.tif'],opsAreaOPS,ref, 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
-save([outputDir,'/SDG_OPS.mat'], 'opsShare');
+geotiffwrite([outputDir,'/ops.tif'], ops, ref, 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
+geotiffwrite([outputDir,'/meanDist2OPS.tif'], meanDist2OPS, ref, 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
+save([outputDir,'/SDG_STAT.mat'], 'opsDistriFeat', 'opsShare', 'popTotal', 'opsLandPerc', 'opsPopPerc', 'cityCode','-append');
+%}
 
-%%
-disp('Calculating the correlation of city morphology and population distribution ...')
-[spatilCorrelation] = lczPopCorr(clamapTifDir,popDir)
+%% calculate land comsumption, and saving
+disp('Calculating SDG: land comsuption ...')
+[landStat] = landComsuptionAndPop(clamapTifDir,popDir);
+popTotal = geotiffread(popDir);
+popTotal = sum(popTotal(:));
+if isfile([outputDir,'/SDG_STAT.mat'])
+    save([outputDir,'/SDG_STAT.mat'], 'landStat','cityCode','popTotal','-append');
+else
+    save([outputDir,'/SDG_STAT.mat'], 'landStat','cityCode','popTotal');
+end
 
-geotiffwrite([outputDir,'/spatilCorrelation.tif'],spatilCorrelation,ref, 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
+%{
+%% calcuate the correlation between clcz and population
+% disp('Calculating the correlation of city morphology and population distribution ...')
+% [spatilCorrelation] = lczPopCorr(clamapTifDir,popDir)
+% geotiffwrite([outputDir,'/spatilCorrelation.tif'],spatilCorrelation,ref, 'GeoKeyDirectoryTag', info.GeoTIFFTags.GeoKeyDirectoryTag);
 
-
+%}
 
 end
