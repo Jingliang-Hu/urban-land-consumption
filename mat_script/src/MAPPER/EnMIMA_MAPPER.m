@@ -19,7 +19,7 @@ for cv_bin = 1:length(param.nbBin)
         [ clusterIdx,clusterCen ] = mapperclustering( data,filIdx,param.clutMeth );
 
 %         % construct the MAPPER derived topological structure, cluster level
-         [ Wv,~,~ ] = visualMAPPER( clusterIdx,clusterCen,fil );
+         [ Wv,~,filMean ] = visualMAPPER( clusterIdx,clusterCen,fil );
 %         g = graph(Wv);
 %         % visualizing the MAPPER derived topological structure, cluster level
 %         subplot(length(nbBin),length(ovLap),(cv_bin-1)*length(ovLap)+cv_ovl);
