@@ -1,5 +1,5 @@
 # ---- Simple run with matlab ----
-## Checkout the README file in directory mat_script
+Checkout the README file in directory mat_script
 
 
 # ---- Multi-processing on LRZ linux cluster ------
