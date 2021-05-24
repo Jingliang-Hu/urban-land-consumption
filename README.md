@@ -1,4 +1,8 @@
-# ---- How to run the processor ------
+# ---- Simple run with matlab ----
+## Checkout the README file in directory mat_script
+
+
+# ---- Multi-processing on LRZ linux cluster ------
 ## Step 1, setup enviroment, i.e. change the path of the processor in env_example.sh
 source env_example.sh
 
