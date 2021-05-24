@@ -1,4 +1,4 @@
-# Urban land classification using Sentinel-1 and Sentinel-2 data with a manifold fusion strategy
+# Urban land classification using Sentinel-1 and Sentinel-2 data with a manifold fusion strategy (MIMA)
 This repository contains the code of the classification system applied in the following paper
 > Jingliang Hu, Yuanyuan Wang, Hannes Taubenböck, Xiao Xiang Zhu (2021). Land Consumption in Cities: A Comparative Study Across the Globe. Cities.
 
