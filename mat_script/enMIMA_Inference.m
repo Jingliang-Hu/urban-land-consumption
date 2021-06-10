@@ -85,9 +85,9 @@ matObj = matfile(datTmpDir);
 
 disp('-------------------------------------------------------------');
 disp('Start inferencing')
-disp('open parallel computing session ...')
-par = parpool(5);
-par.IdleTimeout = 1000;
+%disp('open parallel computing session ...')
+%par = parpool(5);
+%par.IdleTimeout = 1000;
 
 for colIdx = colStart:horizonTiles
     se1ColStart = (labCoord(idxFC,4) - 1) + colIntvl(colIdx);
@@ -112,8 +112,9 @@ for colIdx = colStart:horizonTiles
 
         % parallel inferencing
         scoEnsemble = zeros(size(se1Tile,1),length(Mdl_rf{1}.ClassNames));
-        par.IdleTimeout = 1000;
-        parfor cv_m = 1:numel(maps1)
+        %par.IdleTimeout = 1000;
+        %parfor cv_m = 1:numel(maps1)
+        for cv_m = 1:numel(maps1)
             testFeat = cat(2,se1Tile*maps1{cv_m},se2Tile*maps2{cv_m});
             [~,scores] = predict(Mdl_rf{cv_m},testFeat);
             scoEnsemble = scoEnsemble + scores;
