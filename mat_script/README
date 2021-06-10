@@ -1,2 +1,7 @@
-# An example in Matlab
-Script "example_script.m" shows how to run the codes with the example of city Nairobi.
+# A simple example
+## Step 1: 
+Download the exemplary data for Nairobi [here](ftp://ftp.lrz.de/transfer/urban_land_consumption_nairobi/). Place the data directory in this folder.
+
+## Step 2: 
+Run the script "example_script.m" with the example of city Nairobi
+
