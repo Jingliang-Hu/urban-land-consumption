@@ -1,4 +1,7 @@
 # Urban land classification using Sentinel-1 and Sentinel-2 data with a manifold fusion strategy (MIMA)
+![An example of Mumbai](https://github.com/Jingliang-Hu/Urban_land_consumption/blob/master/an_example_of_mumbai.JPG)
+Caption: An example of Mumbai
+
 This repository contains the code of the classification system applied in the following paper
 > Jingliang Hu, Yuanyuan Wang, Hannes Taubenböck, Xiao Xiang Zhu (2021). Land Consumption in Cities: A Comparative Study Across the Globe. Cities.
 
@@ -17,11 +20,11 @@ For citation:
 }
 ```
 
-## ---- Simple run with matlab ----
+## Simple run with matlab
 Checkout the README file in directory mat_script
 
 
-## ---- Multi-processing on LRZ linux cluster ------
+## Multi-processing on LRZ linux cluster
 ### Step 1, setup enviroment, i.e. change the path of the processor in env_example.sh
 source env_example.sh
 
@@ -32,5 +35,6 @@ cp template/order.pp YOUR_DIRECTORY
 
 ### Step3, run the processor. It will submit all the job 
 run_sdg.sh order.pp
+
 
 
