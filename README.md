@@ -1,5 +1,5 @@
 # Urban land classification using Sentinel-1 and Sentinel-2 data with a manifold fusion strategy (MIMA)
-![An example of Mumbai](https://gitlab.lrz.de/Jingliang/sdg/-/blob/master/an_example_of_mumbai.jpg)
+![An example of Mumbai](https://github.com/Jingliang-Hu/urban-land-consumption/blob/master/an_example_of_mumbai.jpg)
 Caption: An example of Mumbai
 
 This repository contains the code of the classification system applied in the following paper
