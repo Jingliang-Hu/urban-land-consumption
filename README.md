@@ -21,7 +21,11 @@ For citation:
 ```
 
 ## Simple run with matlab
-Checkout the README file in directory mat_script
+Step 1: 
+> Download the exemplary data for Nairobi [here](ftp://ftp.lrz.de/transfer/urban_land_consumption_nairobi/). Place the data directory in this folder "mat_script".
+
+Step 2: 
+> Brower to folder "mat_script", run the script "example_script.m" with the example of city Nairobi
 
 
 ## Multi-processing on LRZ linux cluster
