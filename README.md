@@ -22,7 +22,8 @@ For citation:
 
 ## Simple run with matlab
 Step 1: 
-> Download the exemplary data for Nairobi [here](ftp://ftp.lrz.de/transfer/urban_land_consumption_nairobi/). Place the data directory in this folder "mat_script".
+> Download the exemplary data for Nairobi using the link blow. Place the data directory in this folder "mat_script".
+> ftp://ftp.lrz.de/transfer/urban_land_consumption_nairobi/
 
 Step 2: 
 > Brower to folder "mat_script", run the script "example_script.m" with the example of city Nairobi
